@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The IS-LM Model — An Interactive Explainer</title>
+<meta name="description" content="Interactive IS-LM model: move fiscal and monetary policy sliders, watch the curves shift, and explore why Japan's economy stagnated despite massive government spending.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,500;125,600;125,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FCFDFA;
+  --paper-deep:#F3F6F0;
+  --ink:#18222E;
+  --slate:#5A6878;
+  --grid:#DCE5E9;
+  --grid-strong:#C3D2D9;
+  --is:#0E8CA8;
+  --is-deep:#0A6B81;
+  --lm:#E0762C;
+  --lm-deep:#B55A1B;
+  --eq:#5B4FC4;
+  --eq-soft:#EEEcFB;
+  --danger:#C0392B;
+  --line:#E2E8E4;
+  --radius:14px;
+  --maxw:1080px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  font-size:17px;line-height:1.7;color:var(--ink);
+  background:var(--paper);
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--eq);color:#fff}
+a{color:var(--is-deep)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--eq);outline-offset:2px;border-radius:4px}
+
+/* ---------- header ---------- */
+header.site{
+  position:sticky;top:0;z-index:50;
+  background:rgba(252,253,250,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.nav{max-width:var(--maxw);margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.brand{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);text-decoration:none}
+.brand b{color:var(--is)} .brand i{font-style:normal;color:var(--lm)}
+.nav ul{display:flex;gap:18px;list-style:none;margin-left:auto;flex-wrap:wrap}
+.nav ul a{font-size:14px;font-weight:500;text-decoration:none;color:var(--slate)}
+.nav ul a:hover{color:var(--ink)}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    linear-gradient(var(--grid-strong) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, var(--grid-strong) 1.5px, transparent 1.5px),
+    var(--paper);
+  background-size:22px 22px,22px 22px,110px 110px,110px 110px;
+  border-bottom:1px solid var(--line);
+}
+.hero-inner{max-width:var(--maxw);margin:0 auto;padding:64px 24px 56px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
+h1{
+  font-family:'Archivo',sans-serif;font-stretch:125%;
+  font-weight:700;font-size:clamp(40px,7vw,76px);line-height:1.02;
+  letter-spacing:-.015em;margin:14px 0 18px;
+}
+h1 .ax-is{color:var(--is)} h1 .ax-lm{color:var(--lm)}
+.lede{max-width:620px;font-size:19px;color:var(--slate)}
+.lede strong{color:var(--ink)}
+
+/* ---------- lab ---------- */
+.lab{max-width:var(--maxw);margin:42px auto 0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 1px 2px rgba(24,34,46,.05);overflow:hidden}
+.lab-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 22px;border-bottom:1px solid var(--line)}
+.lab-head h2{font-family:'Archivo',sans-serif;font-stretch:125%;font-size:18px;font-weight:600}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.presets button{
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;
+  padding:7px 13px;border-radius:999px;border:1.5px solid var(--line);
+  background:#fff;color:var(--slate);cursor:pointer;transition:border-color .15s,color .15s;
+}
+.presets button:hover{border-color:var(--ink);color:var(--ink)}
+.presets button.active{border-color:var(--eq);color:var(--eq);background:var(--eq-soft)}
+.lab-body{display:grid;grid-template-columns:minmax(0,1fr) 300px}
+@media(max-width:880px){.lab-body{grid-template-columns:1fr}}
+.plot-wrap{padding:18px 10px 8px 4px}
+.plot-wrap svg{display:block;width:100%;height:auto}
+.readout{display:flex;gap:28px;flex-wrap:wrap;padding:6px 24px 20px}
+.readout .stat .lbl{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.readout .stat .val{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600}
+.readout .stat .val.eq{color:var(--eq)}
+.badge-trap{
+  display:none;align-self:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;
+  color:var(--danger);border:1.5px solid var(--danger);border-radius:999px;padding:6px 14px;
+}
+.badge-trap.show{display:inline-block}
+
+/* ---------- controls ---------- */
+.controls{border-left:1px solid var(--line);padding:20px 22px;background:var(--paper-deep)}
+@media(max-width:880px){.controls{border-left:none;border-top:1px solid var(--line)}}
+.ctl-group{margin-bottom:18px}
+.ctl-group:last-child{margin-bottom:6px}
+.ctl-group .group-lbl{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);margin-bottom:8px}
+.ctl{margin-bottom:12px}
+.ctl label{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:500;margin-bottom:3px}
+.ctl label .sym{font-family:'IBM Plex Mono',monospace}
+.ctl label output{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--slate)}
+.ctl input[type=range]{width:100%;accent-color:var(--eq);height:22px;cursor:pointer}
+.ctl.is-ctl input{accent-color:var(--is)}
+.ctl.lm-ctl input{accent-color:var(--lm)}
+
+/* ---------- sections ---------- */
+main{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+section.block{padding:64px 0;border-bottom:1px solid var(--line)}
+section.block:last-of-type{border-bottom:none}
+.block h2{font-family:'Archivo',sans-serif;font-stretch:125%;font-weight:700;font-size:clamp(26px,4vw,38px);letter-spacing:-.01em;margin:10px 0 18px}
+.block h2 .tint-is{color:var(--is)} .block h2 .tint-lm{color:var(--lm)} .block h2 .tint-eq{color:var(--eq)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+@media(max-width:780px){.cols{grid-template-columns:1fr}}
+.block p{margin-bottom:14px;max-width:64ch}
+.formula{
+  font-family:'IBM Plex Mono',monospace;font-size:15.5px;line-height:1.9;
+  background:#fff;border:1px solid var(--line);border-left:4px solid var(--slate);
+  border-radius:8px;padding:16px 20px;margin:18px 0;overflow-x:auto;white-space:nowrap;
+}
+.formula.f-is{border-left-color:var(--is)}
+.formula.f-lm{border-left-color:var(--lm)}
+.formula.f-eq{border-left-color:var(--eq)}
+.formula small{display:block;white-space:normal;font-size:12px;color:var(--slate);margin-top:8px;line-height:1.6}
+.chain{display:flex;flex-direction:column;gap:10px;margin:18px 0}
+.chain .step{
+  display:flex;gap:12px;align-items:baseline;background:#fff;border:1px solid var(--line);
+  border-radius:10px;padding:12px 16px;font-size:15.5px;
+}
+.chain .step .mono{font-family:'IBM Plex Mono',monospace;font-weight:600;white-space:nowrap}
+.chain .step.s-is .mono{color:var(--is-deep)}
+.chain .step.s-lm .mono{color:var(--lm-deep)}
+.chain .step.s-eq .mono{color:var(--eq)}
+.callout{
+  background:var(--eq-soft);border:1px solid #D9D4F4;border-radius:10px;
+  padding:16px 20px;margin:18px 0;font-size:16px;
+}
+.callout .mono{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.try{
+  display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;
+  border:1.5px solid var(--ink);border-radius:999px;padding:8px 16px;margin-top:6px;
+  color:var(--ink);text-decoration:none;cursor:pointer;background:#fff;
+}
+.try:hover{background:var(--ink);color:#fff}
+
+/* Japan facts */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:22px 0}
+.fact{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.fact .num{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--ink)}
+.fact .cap{font-size:13.5px;color:var(--slate);line-height:1.5;margin-top:4px}
+
+footer.site{border-top:1px solid var(--line);background:var(--paper-deep)}
+footer.site .inner{max-width:var(--maxw);margin:0 auto;padding:28px 24px;font-size:13.5px;color:var(--slate);display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between}
+footer.site .mono{font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="#top"><b>IS</b>–<i>LM</i> / interactive</a>
+    <ul>
+      <li><a href="#lab">Model lab</a></li>
+      <li><a href="#is">IS curve</a></li>
+      <li><a href="#lm">LM curve</a></li>
+      <li><a href="#equilibrium">Equilibrium</a></li>
+      <li><a href="#japan">Case: Japan</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="hero" id="top">
+  <div class="hero-inner">
+    <p class="eyebrow">Macroeconomics · short-run model · goods &amp; money market</p>
+    <h1>Two markets.<br>Two curves.<br><span class="ax-is">One</span> <span class="ax-lm">equilibrium</span>.</h1>
+    <p class="lede">The IS-LM model explains how <strong>income (Y)</strong> and the <strong>interest rate (i)</strong> are determined together — by the goods market and the money market at the same time. Move the sliders below and watch the economy re-solve itself.</p>
+
+    <div class="lab" id="lab" aria-label="Interactive IS-LM model">
+      <div class="lab-head">
+        <h2>Model lab</h2>
+        <div class="presets" role="group" aria-label="Scenario presets">
+          <button data-preset="base" class="active">Baseline</button>
+          <button data-preset="fiscal">Fiscal stimulus G↑</button>
+          <button data-preset="monetary">Monetary easing M↑</button>
+          <button data-preset="japan">Japan: liquidity trap</button>
+        </div>
+      </div>
+      <div class="lab-body">
+        <div>
+          <div class="plot-wrap">
+            <svg id="plot" viewBox="0 0 760 470" role="img" aria-label="IS-LM diagram. The downward-sloping IS curve and upward-sloping LM curve intersect at the equilibrium income Y-star and interest rate i-star, which update as the parameters change."></svg>
+          </div>
+          <div class="readout">
+            <div class="stat"><div class="lbl">Equilibrium income</div><div class="val eq" id="outY">—</div></div>
+            <div class="stat"><div class="lbl">Equilibrium interest rate</div><div class="val eq" id="outI">—</div></div>
+            <div class="stat"><div class="lbl">Δ vs baseline</div><div class="val" id="outD" style="color:var(--slate)">—</div></div>
+            <span class="badge-trap" id="trapBadge">⚠ zero lower bound — liquidity trap</span>
+          </div>
+        </div>
+        <aside class="controls" aria-label="Model parameters">
+          <div class="ctl-group">
+            <div class="group-lbl">Fiscal policy → shifts IS</div>
+            <div class="ctl is-ctl">
+              <label><span><span class="sym">G</span> government spending</span><output id="vG">100</output></label>
+              <input type="range" id="pG" min="0" max="250" step="5" value="100" aria-label="Government spending G">
+            </div>
+            <div class="ctl is-ctl">
+              <label><span><span class="sym">T</span> taxes</span><output id="vT">50</output></label>
+              <input type="range" id="pT" min="0" max="150" step="5" value="50" aria-label="Taxes T">
+            </div>
+          </div>
+          <div class="ctl-group">
+            <div class="group-lbl">Monetary policy → shifts LM</div>
+            <div class="ctl lm-ctl">
+              <label><span><span class="sym">M/P</span> real money supply</span><output id="vM">50</output></label>
+              <input type="range" id="pM" min="10" max="120" step="5" value="50" aria-label="Real money supply M over P">
+            </div>
+          </div>
+          <div class="ctl-group">
+            <div class="group-lbl">Behaviour → changes slopes</div>
+            <div class="ctl is-ctl">
+              <label><span><span class="sym">b</span> investment sensitivity</span><output id="vb">10</output></label>
+              <input type="range" id="pb" min="2" max="25" step="1" value="10" aria-label="Interest sensitivity of investment b">
+            </div>
+            <div class="ctl lm-ctl">
+              <label><span><span class="sym">k</span> income sens. of money demand</span><output id="vk">0.20</output></label>
+              <input type="range" id="pk" min="0.05" max="0.5" step="0.05" value="0.2" aria-label="Income sensitivity of money demand k">
+            </div>
+            <div class="ctl lm-ctl">
+              <label><span><span class="sym">h</span> interest sens. of money demand</span><output id="vh">10</output></label>
+              <input type="range" id="ph" min="2" max="60" step="1" value="10" aria-label="Interest sensitivity of money demand h">
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<section class="block" id="is">
+  <p class="eyebrow">Curve 1 / goods market</p>
+  <h2>The <span class="tint-is">IS curve</span></h2>
+  <div class="cols">
+    <div>
+      <p>The IS curve collects all combinations of the interest rate and income at which <strong>planned demand for goods exactly equals output</strong>. Its starting point is the goods-market equilibrium condition, filled in with the behavioural equations for consumption and investment:</p>
+      <div class="formula f-is">
+        Y = C + I + G<br>
+        C = c₀ + c₁·(Y − T) &nbsp;&nbsp;·&nbsp;&nbsp; I = I₀ − b·i<br>
+        ⇒ &nbsp;Y = 1/(1−c₁) · [ c₀ − c₁·T + I₀ − b·i + G ]
+        <small>Y real income (GDP) · i interest rate · C consumption · I investment · G government spending · T taxes · c₀ autonomous consumption · c₁ marginal propensity to consume · I₀ autonomous investment · b interest sensitivity of investment</small>
+      </div>
+    </div>
+    <div>
+      <p>The interest rate enters through one single term: <strong>−b·i</strong>. A higher interest rate makes credit more expensive, investment falls, and with it total demand and income. That is why the IS curve slopes <strong>downward</strong>.</p>
+      <p>Fiscal policy lives inside the bracket: raising G (or cutting T) increases demand at <em>every</em> interest rate — the whole curve shifts to the right.</p>
+      <button class="try" data-jump="fiscal">▶ Try it: raise G in the lab</button>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="lm">
+  <p class="eyebrow">Curve 2 / money market</p>
+  <h2>The <span class="tint-lm">LM curve</span></h2>
+  <div class="cols">
+    <div>
+      <p>The LM curve collects all combinations of the interest rate and income at which <strong>money demand equals the money supply</strong> set by the central bank. Solving the money-market equilibrium for i gives the curve directly:</p>
+      <div class="formula f-lm">
+        M/P = L(i, Y) = k·Y − h·i<br>
+        ⇒ &nbsp;i = (k/h)·Y − (1/h)·(M/P)
+        <small>M money supply · P price level · L liquidity (money demand) · k income sensitivity of money demand (k&gt;0) · h interest rate sensitivity of money demand (h&gt;0)</small>
+      </div>
+    </div>
+    <div>
+      <p>Income enters through <strong>k·Y</strong>: more income means more transactions, so people want to hold more money. With a fixed money supply, the interest rate must rise to keep the market in balance — the LM curve slopes <strong>upward</strong>.</p>
+      <p>Monetary policy works through M/P: more money shifts LM to the right and lowers the interest rate. And the parameter <strong>h</strong> controls the slope — a very large h makes LM almost flat. Remember that; it is the key to Japan.</p>
+      <button class="try" data-jump="monetary">▶ Try it: raise M/P in the lab</button>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="equilibrium">
+  <p class="eyebrow">Synthesis / both markets at once</p>
+  <h2>The <span class="tint-eq">joint equilibrium</span></h2>
+  <div class="cols">
+    <div>
+      <p>The two curves describe different markets, but they share the same two variables. Neither equation can be solved alone: the IS equation contains the interest rate (through <span style="font-family:'IBM Plex Mono',monospace">−b·i</span>), and the LM equation contains income (through <span style="font-family:'IBM Plex Mono',monospace">k·Y</span>). The markets are linked in both directions:</p>
+      <div class="chain">
+        <div class="step s-lm"><span class="mono">Y↑ → k·Y↑ → i↑</span><span>Higher income raises money demand; with fixed M/P the interest rate must rise (movement along LM).</span></div>
+        <div class="step s-is"><span class="mono">i↑ → −b·i → Y↓</span><span>A higher interest rate cuts investment, lowering demand and income (movement along IS).</span></div>
+        <div class="step s-eq"><span class="mono">⇒ one point (Y*, i*)</span><span>Because each market reacts to the other, exactly one combination clears both at once: the intersection.</span></div>
+      </div>
+    </div>
+    <div>
+      <p>Mathematically, the equilibrium is found by inserting the LM equation into the IS equation and solving:</p>
+      <div class="formula f-eq">
+        Y* = [ A/b + (M/P)/h ] ÷ [ (1−c₁)/b + k/h ]<br>
+        i* = (k/h)·Y* − (1/h)·(M/P)
+        <small>with A = c₀ − c₁·T + I₀ + G (autonomous demand). The solution contains fiscal variables (G, T) <em>and</em> monetary variables (M/P): output and the interest rate are determined jointly by both markets. This is exactly the formula the model lab evaluates live.</small>
+      </div>
+      <div class="callout">
+        <strong>One sentence to remember:</strong> the goods market determines how much is produced, the money market determines at which interest rate — and because each depends on the other, only <span class="mono">(Y*, i*)</span> makes everything consistent.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="japan">
+  <p class="eyebrow">Case study / 1995 – 2022</p>
+  <h2>Japan: stagnation despite <span class="tint-is">record spending</span></h2>
+  <p>Japan is the textbook stress test for IS-LM. After its asset bubble burst in the early 1990s, the government spent for decades — and the economy barely grew. The model can explain why, using nothing but the two curves above.</p>
+  <div class="facts">
+    <div class="fact"><div class="num">≈ 0.1 %</div><div class="cap">GDP growth in 2024 — effectively stagnation, with only ~0.6 % expected for 2025.</div></div>
+    <div class="fact"><div class="num">&gt; 200 %</div><div class="cap">Government debt relative to GDP — the highest ratio of any industrialised country.</div></div>
+    <div class="fact"><div class="num">0 %</div><div class="cap">Interest rate on Japanese government bonds issued between 2016 and 2022.</div></div>
+    <div class="fact"><div class="num">≈ 0.5 %</div><div class="cap">The Bank of Japan's estimate of potential growth — the structural ceiling.</div></div>
+  </div>
+  <div class="cols">
+    <div>
+      <p><strong>Step 1 — the liquidity trap.</strong> With the interest rate at zero, the LM curve becomes flat (in the model: h → very large). The interest rate cannot fall below zero, and extra money is simply held rather than lent. Monetary policy loses its grip — shifting LM no longer moves anything.</p>
+      <p><strong>Step 2 — the fiscal puzzle.</strong> On a flat LM curve, fiscal policy should work <em>especially</em> well: no crowding-out, because i does not rise. The catch: while the state pushed IS to the right with high G, households and firms pushed it back to the <strong>left</strong> at the same time — deflation made waiting profitable, and the private sector was paying down bubble-era debt instead of investing (the "balance-sheet recession"). Government spending only <em>offset</em> the private collapse. Net effect: stagnation.</p>
+    </div>
+    <div>
+      <p><strong>Step 3 — the model's limit.</strong> IS-LM is a short-run demand model. Japan's ceiling today is largely on the supply side: a shrinking, ageing workforce and weak productivity growth hold potential output near 0.5 % — something no demand curve can fix. Knowing where the model ends is part of understanding it.</p>
+      <div class="callout">
+        <strong>See it yourself:</strong> the Japan preset sets <span class="mono">h = 60</span> (flat LM) and weak investment sensitivity. Then move the <span class="mono">M/P</span> slider — almost nothing happens to Y*. Now move <span class="mono">G</span> — that still works. That asymmetry <em>is</em> the liquidity trap.
+      </div>
+      <button class="try" data-jump="japan">▶ Load the Japan scenario</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site">
+  <div class="inner">
+    <span>Built for an economics poster project · model follows the standard textbook IS-LM specification.</span>
+    <span class="mono">Y* and i* solved live from: Y = 1/(1−c₁)[c₀ − c₁T + I₀ − b·i + G] · M/P = kY − hi</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  // Fixed behavioural constants (match the poster derivation)
+  var c0=60, c1=0.6, I0=120;
+
+  var BASE={G:100,T:50,M:50,b:10,k:0.2,h:10};
+  var PRESETS={
+    base:    {G:100,T:50, M:50, b:10,k:0.2, h:10},
+    fiscal:  {G:200,T:50, M:50, b:10,k:0.2, h:10},
+    monetary:{G:100,T:50, M:100,b:10,k:0.2, h:10},
+    japan:   {G:200,T:50, M:110,b:5, k:0.2, h:60}
+  };
+  var state=Object.assign({},BASE);
+
+  // Plot geometry
+  var W=760,H=470, ML=64,MR=24,MT=26,MB=56;
+  var PW=W-ML-MR, PH=H-MT-MB;
+  var Ymax=1000, Imax=20;
+  function px(Y){return ML+(Y/Ymax)*PW}
+  function py(i){return MT+PH-(i/Imax)*PH}
+
+  function solve(s){
+    var A=c0-c1*s.T+I0+s.G;
+    var Ystar=(A/s.b+s.M/s.h)/((1-c1)/s.b+s.k/s.h);
+    var istar=(s.k/s.h)*Ystar-s.M/s.h;
+    return {A:A,Y:Ystar,i:istar};
+  }
+  // IS as i(Y); LM as i(Y)
+  function isI(s,Y){var A=c0-c1*s.T+I0+s.G;return (A-(1-c1)*Y)/s.b}
+  function lmI(s,Y){return (s.k/s.h)*Y-s.M/s.h}
+
+  // clip a straight line i(Y) to the plot rectangle, return SVG line attrs or null
+  function clipLine(f,s){
+    var pts=[],cand=[];
+    // intersect with Y bounds
+    [0,Ymax].forEach(function(Y){cand.push([Y,f(s,Y)])});
+    // intersect with i bounds (solve f(Y)=i)
+    [0,Imax].forEach(function(iv){
+      var Y0=f(s,0), Y1=f(s,Ymax);
+      if(Y1!==Y0){var Y=(iv-Y0)/((Y1-Y0)/Ymax);cand.push([Y,iv])}
+    });
+    cand.forEach(function(p){
+      if(p[0]>=-0.5&&p[0]<=Ymax+0.5&&p[1]>=-0.01&&p[1]<=Imax+0.01)pts.push(p);
+    });
+    if(pts.length<2)return null;
+    pts.sort(function(a,b){return a[0]-b[0]});
+    var a=pts[0],b=pts[pts.length-1];
+    return {x1:px(a[0]),y1:py(a[1]),x2:px(b[0]),y2:py(b[1])};
+  }
+
+  var svg=document.getElementById('plot');
+  var NS='http://www.w3.org/2000/svg';
+  function el(name,attrs,parent){
+    var e=document.createElementNS(NS,name);
+    for(var k in attrs)e.setAttribute(k,attrs[k]);
+    (parent||svg).appendChild(e);return e;
+  }
+
+  function fmt(n,d){return n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}
+
+  function draw(){
+    svg.innerHTML='';
+    var sol=solve(state), base=solve(BASE);
+
+    // axes
+    el('line',{x1:ML,y1:MT+PH,x2:ML+PW+6,y2:MT+PH,stroke:'#18222E','stroke-width':1.5});
+    el('line',{x1:ML,y1:MT+PH,x2:ML,y2:MT-6,stroke:'#18222E','stroke-width':1.5});
+    el('path',{d:'M'+(ML+PW+6)+' '+(MT+PH)+' l-9 -4.5 v9 z',fill:'#18222E'});
+    el('path',{d:'M'+ML+' '+(MT-6)+' l-4.5 9 h9 z',fill:'#18222E'});
+    var axY=el('text',{x:ML+PW-4,y:MT+PH+34,'text-anchor':'end','font-family':"'IBM Plex Sans',sans-serif",'font-size':'14','font-weight':'600',fill:'#18222E'});
+    axY.textContent='Income Y (GDP)';
+    var axI=el('text',{x:ML-46,y:MT+4,'font-family':"'IBM Plex Sans',sans-serif",'font-size':'14','font-weight':'600',fill:'#18222E'});
+    axI.textContent='i';
+    // ticks
+    [250,500,750,1000].forEach(function(t){
+      el('line',{x1:px(t),y1:MT+PH,x2:px(t),y2:MT+PH+5,stroke:'#5A6878'});
+      var tx=el('text',{x:px(t),y:MT+PH+20,'text-anchor':'middle','font-family':"'IBM Plex Mono',monospace",'font-size':'11.5',fill:'#5A6878'});
+      tx.textContent=t;
+    });
+    [5,10,15,20].forEach(function(t){
+      el('line',{x1:ML-5,y1:py(t),x2:ML,y2:py(t),stroke:'#5A6878'});
+      var tx=el('text',{x:ML-10,y:py(t)+4,'text-anchor':'end','font-family':"'IBM Plex Mono',monospace",'font-size':'11.5',fill:'#5A6878'});
+      tx.textContent=t+'%';
+    });
+
+    // ghost baseline curves (dashed) if state differs
+    var changed=JSON.stringify(state)!==JSON.stringify(BASE);
+    if(changed){
+      var gi=clipLine(isI,BASE), gl=clipLine(lmI,BASE);
+      if(gi)el('line',Object.assign({stroke:'#0E8CA8','stroke-width':1.5,'stroke-dasharray':'5 6',opacity:0.3},gi));
+      if(gl)el('line',Object.assign({stroke:'#E0762C','stroke-width':1.5,'stroke-dasharray':'5 6',opacity:0.3},gl));
+    }
+
+    // current curves
+    var li=clipLine(isI,state), ll=clipLine(lmI,state);
+    if(li){
+      el('line',Object.assign({stroke:'#0E8CA8','stroke-width':3,'stroke-linecap':'round'},li));
+      var t1=el('text',{x:Math.min(li.x2+2,W-30),y:Math.max(li.y2-8,MT+12),'font-family':"'IBM Plex Mono',monospace",'font-size':'14','font-weight':'600',fill:'#0A6B81'});
+      t1.textContent='IS';
+    }
+    if(ll){
+      el('text',{x:Math.min(ll.x2-26,W-58),y:Math.max(ll.y2+(ll.y2<MT+24?20:-8),MT+12),'font-family':"'IBM Plex Mono',monospace",'font-size':'14','font-weight':'600',fill:'#B55A1B'}).textContent='LM';
+      el('line',Object.assign({stroke:'#E0762C','stroke-width':3,'stroke-linecap':'round'},ll));
+    }
+
+    // equilibrium (apply zero lower bound for display)
+    var trap=sol.i<0.25;
+    var dispI=Math.max(sol.i,0);
+    var dispY=sol.i<0 ? sol.A/(1-c1) : sol.Y;  // at i=0, output is set by IS alone
+    if(dispY>Ymax)dispY=Ymax;
+    el('line',{x1:px(dispY),y1:py(dispI),x2:px(dispY),y2:MT+PH,stroke:'#5B4FC4','stroke-width':1,'stroke-dasharray':'4 4',opacity:0.7});
+    el('line',{x1:ML,y1:py(dispI),x2:px(dispY),y2:py(dispI),stroke:'#5B4FC4','stroke-width':1,'stroke-dasharray':'4 4',opacity:0.7});
+    el('circle',{cx:px(dispY),cy:py(dispI),r:7,fill:'#5B4FC4',stroke:'#fff','stroke-width':2});
+    var ly=el('text',{x:px(dispY),y:MT+PH+34,'text-anchor':'middle','font-family':"'IBM Plex Mono',monospace",'font-size':'13','font-weight':'600',fill:'#5B4FC4'});
+    ly.textContent='Y*';
+    var li2=el('text',{x:ML+8,y:py(dispI)-7,'font-family':"'IBM Plex Mono',monospace",'font-size':'13','font-weight':'600',fill:'#5B4FC4'});
+    li2.textContent='i*';
+
+    // readouts
+    document.getElementById('outY').textContent=fmt(dispY,0);
+    document.getElementById('outI').textContent=fmt(dispI,2)+' %';
+    var dY=dispY-base.Y, dI=dispI-base.i;
+    document.getElementById('outD').textContent=(dY>=0?'+':'')+fmt(dY,0)+' Y · '+(dI>=0?'+':'')+fmt(dI,2)+' i';
+    document.getElementById('trapBadge').classList.toggle('show',trap);
+  }
+
+  // wire sliders
+  var ids=[['pG','G','vG',0],['pT','T','vT',0],['pM','M','vM',0],['pb','b','vb',0],['pk','k','vk',2],['ph','h','vh',0]];
+  ids.forEach(function(row){
+    var input=document.getElementById(row[0]);
+    input.addEventListener('input',function(){
+      state[row[1]]=parseFloat(input.value);
+      document.getElementById(row[2]).textContent=fmt(state[row[1]],row[3]);
+      setActivePreset(null);
+      draw();
+    });
+  });
+
+  function applyPreset(name){
+    var p=PRESETS[name];if(!p)return;
+    state=Object.assign({},p);
+    ids.forEach(function(row){
+      var input=document.getElementById(row[0]);
+      input.value=state[row[1]];
+      document.getElementById(row[2]).textContent=fmt(state[row[1]],row[3]);
+    });
+    setActivePreset(name);
+    draw();
+  }
+  function setActivePreset(name){
+    document.querySelectorAll('.presets button').forEach(function(b){
+      b.classList.toggle('active',b.dataset.preset===name);
+    });
+  }
+  document.querySelectorAll('.presets button').forEach(function(b){
+    b.addEventListener('click',function(){applyPreset(b.dataset.preset)});
+  });
+  document.querySelectorAll('.try').forEach(function(b){
+    b.addEventListener('click',function(){
+      applyPreset(b.dataset.jump);
+      document.getElementById('lab').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    });
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
