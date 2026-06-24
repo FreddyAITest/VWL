@@ -89,7 +89,14 @@ h1 .ax-is{color:var(--is)} h1 .ax-lm{color:var(--lm)}
 .presets button:hover{border-color:var(--ink);color:var(--ink)}
 .presets button.active{border-color:var(--eq);color:var(--eq);background:var(--eq-soft)}
 .lab-body{display:grid;grid-template-columns:minmax(0,1fr) 300px}
-@media(max-width:880px){.lab-body{grid-template-columns:1fr}}
+@media(max-width:880px){
+  /* on mobile: graph → sliders → readout, so the controls sit right under the chart */
+  .lab-body{display:flex;flex-direction:column}
+  .lab-main{display:contents}
+  .plot-wrap{order:1}
+  .controls{order:2}
+  .readout{order:3}
+}
 .plot-wrap{padding:18px 10px 8px 4px}
 .plot-wrap svg{display:block;width:100%;height:auto}
 .readout{display:flex;gap:28px;flex-wrap:wrap;padding:6px 24px 20px}
@@ -104,7 +111,10 @@ h1 .ax-is{color:var(--is)} h1 .ax-lm{color:var(--lm)}
 
 /* ---------- controls ---------- */
 .controls{border-left:1px solid var(--line);padding:20px 22px;background:var(--paper-deep)}
-@media(max-width:880px){.controls{border-left:none;border-top:1px solid var(--line)}}
+@media(max-width:880px){
+  .controls{border-left:none;border-top:1px solid var(--line)}
+  .readout{border-top:1px solid var(--line);padding-top:16px}
+}
 .ctl-group{margin-bottom:18px}
 .ctl-group:last-child{margin-bottom:6px}
 .ctl-group .group-lbl{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);margin-bottom:8px}
@@ -230,7 +240,7 @@ footer.site .mono{font-family:'IBM Plex Mono',monospace}
         </div>
       </div>
       <div class="lab-body">
-        <div>
+        <div class="lab-main">
           <div class="plot-wrap">
             <svg id="plot" viewBox="0 0 760 470" role="img" aria-label="IS-LM diagram. The downward-sloping IS curve and upward-sloping LM curve intersect at the equilibrium income Y-star and interest rate i-star, which update as the parameters change."></svg>
           </div>
